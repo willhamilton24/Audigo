@@ -24,9 +24,9 @@ func main() {
         fmt.Println(err)
     }
 
-    albums, err := client.GetAlbums([]string{"6guJZpZ52v4MrJKIH7tASl", "41MnTivkwTO3UUJ8DrqEJJ", "6UXCm6bOO4gFlDQZV5yL37"})
+    albums, err := client.GetArtistAlbums("1vCWHaC5f2uS3yhpwWbIA6")
     if err != nil {
         fmt.Println(err)
     }
-    fmt.Println(albums.Albums[1].Name)
+    fmt.Println(albums)
 }
