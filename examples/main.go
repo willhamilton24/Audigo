@@ -23,4 +23,9 @@ func main() {
     if err := client.Authenticate(); err != nil {
         fmt.Println(err)
     }
+    album, err := client.GetAlbum("6guJZpZ52v4MrJKIH7tASl")
+    if err != nil {
+        fmt.Println(err)
+    }
+    fmt.Println(album.Tracks.Items[2].Name)
 }
