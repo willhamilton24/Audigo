@@ -9,7 +9,6 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fastjson"
 	"log"
-
 )
 
 type Track struct {
@@ -102,6 +101,84 @@ type SpotifyAlbum struct {
 	URI  string `json:"uri"`
 }
 
+type SpotifyAlbums struct {
+	Albums []struct {
+		AlbumType string `json:"album_type"`
+		Artists   []struct {
+			ExternalUrls struct {
+				Spotify string `json:"spotify"`
+			} `json:"external_urls"`
+			Href string `json:"href"`
+			ID   string `json:"id"`
+			Name string `json:"name"`
+			Type string `json:"type"`
+			URI  string `json:"uri"`
+		} `json:"artists"`
+		AvailableMarkets []string `json:"available_markets"`
+		Copyrights       []struct {
+			Text string `json:"text"`
+			Type string `json:"type"`
+		} `json:"copyrights"`
+		ExternalIds struct {
+			Upc string `json:"upc"`
+		} `json:"external_ids"`
+		ExternalUrls struct {
+			Spotify string `json:"spotify"`
+		} `json:"external_urls"`
+		Genres []interface{} `json:"genres"`
+		Href   string        `json:"href"`
+		ID     string        `json:"id"`
+		Images []struct {
+			Height int64  `json:"height"`
+			URL    string `json:"url"`
+			Width  int64  `json:"width"`
+		} `json:"images"`
+		Label                string `json:"label"`
+		Name                 string `json:"name"`
+		Popularity           int64  `json:"popularity"`
+		ReleaseDate          string `json:"release_date"`
+		ReleaseDatePrecision string `json:"release_date_precision"`
+		TotalTracks          int64  `json:"total_tracks"`
+		Tracks               struct {
+			Href  string `json:"href"`
+			Items []struct {
+				Artists []struct {
+					ExternalUrls struct {
+						Spotify string `json:"spotify"`
+					} `json:"external_urls"`
+					Href string `json:"href"`
+					ID   string `json:"id"`
+					Name string `json:"name"`
+					Type string `json:"type"`
+					URI  string `json:"uri"`
+				} `json:"artists"`
+				AvailableMarkets []string `json:"available_markets"`
+				DiscNumber       int64    `json:"disc_number"`
+				DurationMs       int64    `json:"duration_ms"`
+				Explicit         bool     `json:"explicit"`
+				ExternalUrls     struct {
+					Spotify string `json:"spotify"`
+				} `json:"external_urls"`
+				Href        string `json:"href"`
+				ID          string `json:"id"`
+				IsLocal     bool   `json:"is_local"`
+				Name        string `json:"name"`
+				PreviewURL  string `json:"preview_url"`
+				TrackNumber int64  `json:"track_number"`
+				Type        string `json:"type"`
+				URI         string `json:"uri"`
+			} `json:"items"`
+			Limit    int64       `json:"limit"`
+			Next     interface{} `json:"next"`
+			Offset   int64       `json:"offset"`
+			Previous interface{} `json:"previous"`
+			Total    int64       `json:"total"`
+		} `json:"tracks"`
+		Type string `json:"type"`
+		URI  string `json:"uri"`
+	} `json:"albums"`
+}
+
 
 type apiResponse struct {
 	url string
@@ -132,7 +209,7 @@ func apiRequest(url string, method string, reqBody []byte, authHeader string) (r
 	}
 
 	body := resp.Body()
-	//fmt.Println(resp)
+	fmt.Println(resp)
 
 	status := resp.StatusCode()
 	if status != fasthttp.StatusOK {
@@ -183,4 +260,25 @@ func (c SpotifyClient) GetAlbum(id string) (album SpotifyAlbum, e error)   {
 	err2 := json.Unmarshal(resp.response, &album)
 	if err2 != nil { return album, err2 }
 	return album, nil
+}
+
+func (c SpotifyClient) GetAlbums(ids []string) (albums SpotifyAlbums, e error) {
+	fmt.Println("GETTING ALBUMS")
+	if len(ids) < 20 {
+		queryString := "?ids="
+		for i := 0; i < len(ids) - 1; i++ {
+			queryString += ids[i] + ","
+		}
+		queryString += ids[len(ids) - 1]
+		fmt.Println("QS" + queryString)
+
+		resp, err := apiRequest("https://api.spotify.com/v1/albums/" + queryString, "GET", []byte{}, c.AccessToken)
+		if err != nil { return albums, err }
+		fmt.Println(string(resp.response))
+		err2 := json.Unmarshal(resp.response, &albums)
+		if err2 != nil { return albums, err2 }
+		return albums, nil
+	} else {
+		return albums, errors.New("Maximum of 20 IDs Per Call")
+	}
 }

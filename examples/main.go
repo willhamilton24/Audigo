@@ -23,9 +23,10 @@ func main() {
     if err := client.Authenticate(); err != nil {
         fmt.Println(err)
     }
-    album, err := client.GetAlbum("6guJZpZ52v4MrJKIH7tASl")
+
+    albums, err := client.GetAlbums([]string{"6guJZpZ52v4MrJKIH7tASl", "41MnTivkwTO3UUJ8DrqEJJ", "6UXCm6bOO4gFlDQZV5yL37"})
     if err != nil {
         fmt.Println(err)
     }
-    fmt.Println(album.Tracks.Items[2].Name)
+    fmt.Println(albums.Albums[1].Name)
 }
