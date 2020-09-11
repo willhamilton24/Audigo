@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fastjson"
@@ -25,13 +26,90 @@ type Album struct {
 	release string
 }
 
+type SpotifyAlbum struct {
+	AlbumType string `json:"album_type"`
+	Artists   []struct {
+		ExternalUrls struct {
+			Spotify string `json:"spotify"`
+		} `json:"external_urls"`
+		Href string `json:"href"`
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		Type string `json:"type"`
+		URI  string `json:"uri"`
+	} `json:"artists"`
+	AvailableMarkets []string `json:"available_markets"`
+	Copyrights       []struct {
+		Text string `json:"text"`
+		Type string `json:"type"`
+	} `json:"copyrights"`
+	ExternalIds struct {
+		Upc string `json:"upc"`
+	} `json:"external_ids"`
+	ExternalUrls struct {
+		Spotify string `json:"spotify"`
+	} `json:"external_urls"`
+	Genres []interface{} `json:"genres"`
+	Href   string        `json:"href"`
+	ID     string        `json:"id"`
+	Images []struct {
+		Height int64  `json:"height"`
+		URL    string `json:"url"`
+		Width  int64  `json:"width"`
+	} `json:"images"`
+	Label                string `json:"label"`
+	Name                 string `json:"name"`
+	Popularity           int64  `json:"popularity"`
+	ReleaseDate          string `json:"release_date"`
+	ReleaseDatePrecision string `json:"release_date_precision"`
+	TotalTracks          int64  `json:"total_tracks"`
+	Tracks               struct {
+		Href  string `json:"href"`
+		Items []struct {
+			Artists []struct {
+				ExternalUrls struct {
+					Spotify string `json:"spotify"`
+				} `json:"external_urls"`
+				Href string `json:"href"`
+				ID   string `json:"id"`
+				Name string `json:"name"`
+				Type string `json:"type"`
+				URI  string `json:"uri"`
+			} `json:"artists"`
+			AvailableMarkets []string `json:"available_markets"`
+			DiscNumber       int64    `json:"disc_number"`
+			DurationMs       int64    `json:"duration_ms"`
+			Explicit         bool     `json:"explicit"`
+			ExternalUrls     struct {
+				Spotify string `json:"spotify"`
+			} `json:"external_urls"`
+			Href        string `json:"href"`
+			ID          string `json:"id"`
+			IsLocal     bool   `json:"is_local"`
+			Name        string `json:"name"`
+			PreviewURL  string `json:"preview_url"`
+			TrackNumber int64  `json:"track_number"`
+			Type        string `json:"type"`
+			URI         string `json:"uri"`
+		} `json:"items"`
+		Limit    int64       `json:"limit"`
+		Next     interface{} `json:"next"`
+		Offset   int64       `json:"offset"`
+		Previous interface{} `json:"previous"`
+		Total    int64       `json:"total"`
+	} `json:"tracks"`
+	Type string `json:"type"`
+	URI  string `json:"uri"`
+}
+
+
 type apiResponse struct {
 	url string
 	status int
 	response []byte
 }
 
-func apiRequest(url string, method string, reqBody []byte, authHeader string) (result apiResponse, err error)  {
+func apiRequest(url string, method string, reqBody []byte, authHeader string) (result apiResponse, e error)  {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 	req.SetRequestURI(url)
@@ -40,17 +118,21 @@ func apiRequest(url string, method string, reqBody []byte, authHeader string) (r
 	req.Header.Set("Authorization", authHeader)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	req.SetBody(reqBody)
+	if method == "POST" {
+		req.SetBody(reqBody)
+	}
+
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
 	if reqError := fasthttp.Do(req, resp); reqError != nil {
-		fmt.Printf("API request failed: %s\n", err)
+		fmt.Printf("API request failed: %s\n", reqError)
 		return apiResponse{url, 0, []byte{}}, reqError
 	}
 
 	body := resp.Body()
+	//fmt.Println(resp)
 
 	status := resp.StatusCode()
 	if status != fasthttp.StatusOK {
@@ -85,14 +167,20 @@ func (c *SpotifyClient) Authenticate() error {
 	json := string(resp.response)
 	var p fastjson.Parser
 	v, err := p.Parse(json)
-	if err != nil { log.Fatal(err) }
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
 	data := string(v.GetStringBytes("access_token"))
 	fmt.Println(data)
-	c.AccessToken = data
+	c.AccessToken = "Bearer " + data
 	return nil
 }
 
-func (c SpotifyClient) getAlbum() Album  {
-	myAlbum := Album{title: "Madvillainy", artist: "Madvillain", runtime: "46:00", tracks: []Track{}, release: "2004"}
-	return myAlbum
+func (c SpotifyClient) GetAlbum(id string) (album SpotifyAlbum, e error)   {
+	resp, err := apiRequest("https://api.spotify.com/v1/albums/" + id, "GET", []byte{}, c.AccessToken)
+	if err != nil { return album, err }
+	err2 := json.Unmarshal(resp.response, &album)
+	if err2 != nil { return album, err2 }
+	return album, nil
 }
