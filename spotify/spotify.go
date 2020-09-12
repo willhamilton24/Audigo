@@ -2,9 +2,9 @@ package spotify
 
 import (
 	"bytes"
-	"errors"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fastjson"
@@ -152,15 +152,19 @@ func apiRequest(url string, method string, reqBody []byte, authHeader string) (r
 	return result, nil
 }
 
+func makeQueryString(params map[string]string) string {
+	queryString := "?ids="
+	for key, value := range params {
+		queryString += key +"="+value+"&"
+	}
+	return queryString[0:len(queryString)-2]
+}
+
 type SpotifyClient struct {
 	ClientId string
 	ApiSecret string
 	AccessToken string
 }
-
-//
-// ALBUMS
-//
 
 func (c *SpotifyClient) Authenticate() error {
 	decodedHeader := c.ClientId + ":" + c.ApiSecret
@@ -184,12 +188,72 @@ func (c *SpotifyClient) Authenticate() error {
 	return nil
 }
 
+//
+// TRACKS
+//
+
+type SpotifyTracks struct {
+	Href  string `json:"href"`
+	Items []struct {
+	Artists []struct {
+	ExternalUrls struct {
+	Spotify string `json:"spotify"`
+	} `json:"external_urls"`
+	Href string `json:"href"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+	URI  string `json:"uri"`
+	} `json:"artists"`
+	AvailableMarkets []string `json:"available_markets"`
+	DiscNumber       int64    `json:"disc_number"`
+	DurationMs       int64    `json:"duration_ms"`
+	Explicit         bool     `json:"explicit"`
+	ExternalUrls     struct {
+	Spotify string `json:"spotify"`
+	} `json:"external_urls"`
+	Href        string `json:"href"`
+	ID          string `json:"id"`
+	IsLocal     bool   `json:"is_local"`
+	Name        string `json:"name"`
+	PreviewURL  string `json:"preview_url"`
+	TrackNumber int64  `json:"track_number"`
+	Type        string `json:"type"`
+	URI         string `json:"uri"`
+	} `json:"items"`
+	Limit    int64       `json:"limit"`
+	Next     interface{} `json:"next"`
+	Offset   int64       `json:"offset"`
+	Previous interface{} `json:"previous"`
+	Total    int64       `json:"total"`
+}
+
+
+//
+// ALBUMS
+//
+
 func (c SpotifyClient) GetAlbum(id string) (album SpotifyAlbum, e error)   {
 	resp, err := apiRequest("https://api.spotify.com/v1/albums/" + id, "GET", []byte{}, c.AccessToken)
 	if err != nil { return album, err }
 	err2 := json.Unmarshal(resp.response, &album)
 	if err2 != nil { return album, err2 }
 	return album, nil
+}
+
+
+func (c SpotifyClient) GetAlbumTracks(id string, options map[string]string) (tracks SpotifyTracks, e error) {
+	queryString := ""
+	if options != nil {
+		queryString = makeQueryString(options)
+	}
+
+	resp, err := apiRequest("https://api.spotify.com/v1/albums/" + id + "/tracks" + queryString, "GET", []byte{}, c.AccessToken)
+	if err != nil { return tracks, err }
+	fmt.Println(string(resp.response))
+	err2 := json.Unmarshal(resp.response, &tracks)
+	if err2 != nil { return tracks, err2 }
+	return tracks, nil
 }
 
 func (c SpotifyClient) GetAlbums(ids []string) (albums SpotifyAlbums, e error) {
@@ -204,7 +268,7 @@ func (c SpotifyClient) GetAlbums(ids []string) (albums SpotifyAlbums, e error) {
 
 		resp, err := apiRequest("https://api.spotify.com/v1/albums/" + queryString, "GET", []byte{}, c.AccessToken)
 		if err != nil { return albums, err }
-		fmt.Println(string(resp.response))
+		//fmt.Println(string(resp.response))
 		err2 := json.Unmarshal(resp.response, &albums)
 		if err2 != nil { return albums, err2 }
 		return albums, nil
