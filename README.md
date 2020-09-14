@@ -20,6 +20,10 @@ Under construction, check back later!
 *SpotifyClient.GetAlbum(id string) (album SpotifyAlbum, e error)*
 - id: Spotify Album Id
 
+*SpotifyClient.GetAlbumTracks(id string, options map[string]string) (tracks SpotifyTracks, e error)*
+- id: Spotify Album Id
+- options: Query string options
+
 *SpotifyClient.GetAlbums(ids []string) (album SpotifyAlbums, e error)*
 - ids: Slice of Spotify Album Ids
 
