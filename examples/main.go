@@ -24,9 +24,9 @@ func main() {
         fmt.Println(err)
     }
 
-    tracks, err := client.GetAlbumTracks("6akEvsycLGftJxYudPjmqK", make(map[string]string))
+    results, err := client.Search("wu tang iron flag", "album")
     if err != nil {
         fmt.Println(err)
     }
-    fmt.Println(tracks)
+    fmt.Println(results)
 }

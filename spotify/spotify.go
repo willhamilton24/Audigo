@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"net/url"
 	"fmt"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fastjson"
@@ -153,7 +154,7 @@ func apiRequest(url string, method string, reqBody []byte, authHeader string) (r
 }
 
 func makeQueryString(params map[string]string) string {
-	queryString := "?ids="
+	queryString := "?"
 	for key, value := range params {
 		queryString += key +"="+value+"&"
 	}
@@ -328,4 +329,58 @@ func (c SpotifyClient) GetArtistAlbums(id string) (albums ArtistAlbums, e error)
 	err2 := json.Unmarshal(resp.response, &albums)
 	if err2 != nil { return albums, err2 }
 	return albums, nil
+}
+
+//
+// SEARCH
+//
+
+type SpotifySearchResults struct {
+	Artists struct {
+		Href  string `json:"href"`
+		Items []struct {
+			ExternalUrls struct {
+				Spotify string `json:"spotify"`
+			} `json:"external_urls"`
+			Followers struct {
+				Href  interface{} `json:"href"`
+				Total int64       `json:"total"`
+			} `json:"followers"`
+			Genres []string `json:"genres"`
+			Href   string   `json:"href"`
+			ID     string   `json:"id"`
+			Images []struct {
+				Height int64  `json:"height"`
+				URL    string `json:"url"`
+				Width  int64  `json:"width"`
+			} `json:"images"`
+			Name       string `json:"name"`
+			Popularity int64  `json:"popularity"`
+			Type       string `json:"type"`
+			URI        string `json:"uri"`
+		} `json:"items"`
+		Limit    int64       `json:"limit"`
+		Next     interface{} `json:"next"`
+		Offset   int64       `json:"offset"`
+		Previous interface{} `json:"previous"`
+		Total    int64       `json:"total"`
+	} `json:"artists"`
+	Albums struct {
+		Href  string `json:"href"`
+		Items []SpotifyAlbum `json: "items"`
+		Limit    int64       `json:"limit"`
+		Next     interface{} `json:"next"`
+		Offset   int64       `json:"offset"`
+		Previous interface{} `json:"previous"`
+		Total    int64       `json:"total"`
+	}
+}
+
+func (c SpotifyClient) Search(search string, catagory string) (results string, e error)  {
+	keywords := url.QueryEscape(search)
+	resp, err := apiRequest("https://api.spotify.com/v1/search?q=" + keywords + "&type=" + catagory, "GET", []byte{}, c.AccessToken)
+	if err != nil { return results,err}
+	fmt.Println(string(resp.response))
+	//err2 := json.Unmarshal(resp.response, &results)
+	return results, e
 }
