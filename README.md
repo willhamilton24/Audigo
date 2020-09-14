@@ -1,5 +1,5 @@
 # Audigo
-A Go Wrapper for Music APIs - Last.fm, Spotify
+A Go Wrapper for Music APIs - Last.fm, Spotify, Apple Music, Soundcloud, Tidal, Discogs
 
 Under construction, check back later!
 
