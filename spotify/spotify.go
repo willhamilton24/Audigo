@@ -376,11 +376,12 @@ type SpotifySearchResults struct {
 	}
 }
 
-func (c SpotifyClient) Search(search string, catagory string) (results string, e error)  {
+func (c SpotifyClient) Search(search string, catagory string) (results SpotifySearchResults, e error)  {
 	keywords := url.QueryEscape(search)
 	resp, err := apiRequest("https://api.spotify.com/v1/search?q=" + keywords + "&type=" + catagory, "GET", []byte{}, c.AccessToken)
 	if err != nil { return results,err}
 	fmt.Println(string(resp.response))
-	//err2 := json.Unmarshal(resp.response, &results)
+	err2 := json.Unmarshal(resp.response, &results)
+	if err2 != nil { return results, err2 }
 	return results, e
 }
