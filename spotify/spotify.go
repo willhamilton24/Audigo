@@ -279,8 +279,32 @@ func (c SpotifyClient) GetAlbums(ids []string) (albums SpotifyAlbums, e error) {
 }
 
 //
-// ARISTS
+// ARTISTS
 //
+
+type SpotifyArtist struct {
+	ExternalUrls struct {
+		Spotify string `json:"spotify"`
+	} `json:"external_urls"`
+	Followers struct {
+		Href  interface{} `json:"href"`
+		Total int64       `json:"total"`
+	} `json:"followers"`
+	Genres []string `json:"genres"`
+	Href   string   `json:"href"`
+	ID     string   `json:"id"`
+	Images []struct {
+		Height int64  `json:"height"`
+		URL    string `json:"url"`
+		Width  int64  `json:"width"`
+	} `json:"images"`
+	Name       string `json:"name"`
+	Popularity int64  `json:"popularity"`
+	Type       string `json:"type"`
+	URI        string `json:"uri"`
+}
+
+
 
 type ArtistAlbums struct {
 	Href  string `json:"href"`
@@ -322,8 +346,17 @@ type ArtistAlbums struct {
 	Total    int64       `json:"total"`
 }
 
+func (c SpotifyClient) GetArtist(id string) (artist SpotifyArtist, e error) {
+	resp, err := apiRequest("https://api.spotify.com/v1/artists/" + id, "GET", []byte{}, c.AccessToken)
+	if err != nil { return  artist, err }
+	fmt.Println(string(resp.response))
+	err2 := json.Unmarshal(resp.response, &artist)
+	if err2 != nil { return artist, err2 }
+	return  artist, e
+}
+
 func (c SpotifyClient) GetArtistAlbums(id string) (albums ArtistAlbums, e error) {
-	resp, err := apiRequest("https://api.spotify.com/v1/artists/1vCWHaC5f2uS3yhpwWbIA6/albums", "GET", []byte{}, c.AccessToken)
+	resp, err := apiRequest("https://api.spotify.com/v1/artists/"+ id +"/albums", "GET", []byte{}, c.AccessToken)
 	if err != nil { return albums,err}
 	fmt.Println(string(resp.response))
 	err2 := json.Unmarshal(resp.response, &albums)

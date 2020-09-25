@@ -24,7 +24,7 @@ func main() {
         fmt.Println(err)
     }
 
-    results, err := client.Search("wu tang iron flag", "album")
+    results, err := client.GetArtist("0OdUWJ0sBjDrqHygGUXeCF")
     if err != nil {
         fmt.Println(err)
     }
