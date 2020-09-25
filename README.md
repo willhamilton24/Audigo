@@ -1,5 +1,5 @@
 # Audigo
-A Go Wrapper for Music APIs - Last.fm, Spotify
+A Go Wrapper for Music APIs - Last.fm, Spotify, Apple Music, Soundcloud, Tidal, Discogs
 
 Under construction, check back later!
 
@@ -31,3 +31,11 @@ Under construction, check back later!
 
 *SpotifyClient.GetArtistAlbums(id string) (albums ArtistAlbums, e error)*
 - id: Spotify Artist Id
+
+
+#### Search
+
+*SpotifyClient.Search(term string, catagory string) (results SpotifySearchResults, e error)* 
+- term: The Search Term
+- catagory: "artist" or "album"
+
